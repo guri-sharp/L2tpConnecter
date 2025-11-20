@@ -17,7 +17,9 @@ namespace L2TPConnecter
 
         private void ConnectionDialog_Load(object sender, EventArgs e)
         {
+            IsCollapsed = false;
             titleLabel.Text = "";
+            label1.Text = "";
         }
 
         private bool isProcessing = false;
@@ -51,6 +53,7 @@ namespace L2TPConnecter
 
             this.ControlBox = true;
             closeButton.Enabled = true;
+            closeButton.Refresh();
 
             if (result)//成功した場合3秒後に閉じる
             {
@@ -82,9 +85,9 @@ namespace L2TPConnecter
             var script = PowerShellScript.GetConnectScript(model);
 
             await PowerShell.Run(script,
-                output => AppendLog($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] " + output, Color.WhiteSmoke),
-                error => AppendLog($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] " + error, Color.Pink)
-            );
+                output =>AppendLog(output, Color.WhiteSmoke),
+                error =>AppendLog(error, Color.Pink)
+                );
 
             await ConnectionCheck(model);
 
@@ -99,6 +102,7 @@ namespace L2TPConnecter
             else
             {
                 titleLabel.Text = Resources.ResourceManager.GetString("ConnectionComplete");
+                label1.Text = "";
                 return true;
             }
         }
@@ -108,13 +112,14 @@ namespace L2TPConnecter
             var script = PowerShellScript.GetDisconnectScript(model);
 
             await PowerShell.Run(script,
-                output => AppendLog($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] " + output, Color.WhiteSmoke),
-                error => AppendLog($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] " + error, Color.Pink)
-            );
+                output => AppendLog(output, Color.WhiteSmoke),
+                error => AppendLog(error, Color.Pink)
+                );
 
             await ConnectionCheck(model);
 
             titleLabel.Text = Resources.ResourceManager.GetString("DisconnectionComplete");
+            label1.Text = "";
 
             // Return true if disconnected (i.e. not connected)
             return !model.IsConnected;
@@ -147,8 +152,12 @@ namespace L2TPConnecter
                     logTextBox.SelectionStart = logTextBox.TextLength;
                     logTextBox.SelectionLength = 0;
                     logTextBox.SelectionColor = color;
-                    logTextBox.AppendText(text + "\r\n");
+                    logTextBox.AppendText($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}] " + text + "\r\n");
                     logTextBox.SelectionColor = logTextBox.ForeColor; // 元に戻す
+                }));
+                label1.Invoke((Action)(() =>
+                {
+                    label1.Text = text;
                 }));
             }
             catch { }
@@ -163,6 +172,34 @@ namespace L2TPConnecter
         {
             if (isProcessing) e.Cancel = true;
 
+        }
+
+
+        private bool isCollapsed = true;
+        public bool IsCollapsed
+        {
+            get { return isCollapsed; }
+            set
+            {
+                isCollapsed = value;
+                if (isCollapsed)
+                {
+                    //this.Height = 500;
+                    panel3.Visible = true;
+                    collapseButton.Text = "▲";
+                }
+                else
+                {
+                    //this.Height = 190;
+                    panel3.Visible = false;
+                    collapseButton.Text = "▼";
+                }
+            }
+        }
+
+        private void collapseButton_Click(object sender, EventArgs e)
+        {
+            IsCollapsed=!IsCollapsed;
         }
     }
 }

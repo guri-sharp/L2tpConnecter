@@ -134,6 +134,7 @@ namespace L2TPConnecter
             {
                 if (row.IsConnected)
                 {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                     e.Value = Resources.ResourceManager.GetString("Connected");
                     e.CellStyle.BackColor = System.Drawing.Color.FromArgb(102, 205, 170); // ミントグリーン
                     e.CellStyle.ForeColor = System.Drawing.Color.FromArgb(44, 62, 80);    // ダークグレー
@@ -141,6 +142,7 @@ namespace L2TPConnecter
                 }
                 else
                 {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                     e.Value = Resources.ResourceManager.GetString("Disconnected");
                     e.CellStyle.BackColor = System.Drawing.Color.FromArgb(255, 182, 193); // ライトピンク
                     e.CellStyle.ForeColor = System.Drawing.Color.FromArgb(123, 36, 28);   // ブラウン

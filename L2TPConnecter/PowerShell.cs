@@ -26,13 +26,13 @@ namespace L2TPConnecter
 
             process.OutputDataReceived += (s, e) =>
             {
-                if (e.Data != null)
+                if (!string .IsNullOrEmpty(e.Data))
                     onOutput?.Invoke(e.Data);
             };
 
             process.ErrorDataReceived += (s, e) =>
             {
-                if (e.Data != null)
+                if (!string.IsNullOrEmpty(e.Data))
                     onError?.Invoke(e.Data);
             };
 
