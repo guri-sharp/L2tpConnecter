@@ -346,5 +346,19 @@ namespace L2TPConnecter
                 color,
                 TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
         }
+
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex>=0) // ヘッダー行でないことを確認
+            {
+                var row = dataGridView1.Rows[e.RowIndex].DataBoundItem as VpnSettingModel;
+                if (row == null) return;
+
+                var dlg = new ConnectionDialog();
+                dlg.VpnSetting = row;
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.ShowDialog();
+            }
+        }
     }
 }

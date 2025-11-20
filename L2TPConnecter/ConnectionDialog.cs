@@ -31,16 +31,18 @@ namespace L2TPConnecter
             logTextBox.Clear();
 
             progressBar1.Style = ProgressBarStyle.Marquee; // 開始時
+            var result = false;
 
             if (!VpnSetting.IsConnected)
             {
                 titleLabel.Text = Resources.ResourceManager.GetString("Connecting");
-                await ConnectVpn(VpnSetting);
+                // await and ignore the result is allowed, but capture it if needed
+                result = await ConnectVpn(VpnSetting);
             }
             else
             {
                 titleLabel.Text = Resources.ResourceManager.GetString("Disconnecting");
-                await DisconnectVpn(VpnSetting);
+                result = await DisconnectVpn(VpnSetting);
             }
 
             progressBar1.Style = ProgressBarStyle.Blocks;  // 完了時
@@ -50,9 +52,32 @@ namespace L2TPConnecter
             this.ControlBox = true;
             closeButton.Enabled = true;
 
+            if (result)//成功した場合3秒後に閉じる
+            {
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(3000);
+                    try
+                    {
+                        if (this.IsDisposed || this.Disposing) return;
+                        if (this.IsHandleCreated)
+                        {
+                            this.BeginInvoke((Action)(() =>
+                            {
+                                if (!this.IsDisposed && !this.Disposing)
+                                    this.Close();
+                            }));
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // ハンドルが無効／既に破棄されている場合、安全に無視できる
+                    }
+                });
+            }
         }
 
-        private async Task ConnectVpn(VpnSettingModel model)
+        private async Task<bool> ConnectVpn(VpnSettingModel model)
         {
             var script = PowerShellScript.GetConnectScript(model);
 
@@ -69,14 +94,16 @@ namespace L2TPConnecter
                 await PowerShell.Run(script, output => { }, error => { });
 
                 titleLabel.Text = Resources.ResourceManager.GetString("Error");
+                return false;
             }
             else
             {
                 titleLabel.Text = Resources.ResourceManager.GetString("ConnectionComplete");
+                return true;
             }
         }
 
-        private async Task DisconnectVpn(VpnSettingModel model)
+        private async Task<bool> DisconnectVpn(VpnSettingModel model)
         {
             var script = PowerShellScript.GetDisconnectScript(model);
 
@@ -88,6 +115,9 @@ namespace L2TPConnecter
             await ConnectionCheck(model);
 
             titleLabel.Text = Resources.ResourceManager.GetString("DisconnectionComplete");
+
+            // Return true if disconnected (i.e. not connected)
+            return !model.IsConnected;
         }
         private async Task ConnectionCheck(VpnSettingModel model)
         {
